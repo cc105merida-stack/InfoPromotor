@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Promotores</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 20px;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .checkbox-group input {
+            width: auto;
+            margin: 0;
+        }
+        .checkbox-group label {
+            margin: 0;
+            font-weight: normal;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+        .success {
+            color: green;
+            background: #e0ffe0;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .hidden {
+            display: none;
+        }
+        hr {
+            margin: 20px 0;
+        }
+        .field-group {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Formulario de Ventas</h1>
+    <form id="ventaForm">
+        <!-- Tipo de venta -->
+        <label for="tipoVenta">TIPO DE VENTA *</label>
+        <select id="tipoVenta" name="tipoVenta" required>
+            <option value="">Seleccione...</option>
+            <option value="SERVICIO NUEVO">SERVICIO NUEVO</option>
+            <option value="ALTA COMERCIAL">ALTA COMERCIAL</option>
+            <option value="ALTA RESIDENCIAL">ALTA RESIDENCIAL</option>
+            <option value="ALTA INTERNET RECUPERADO">ALTA INTERNET RECUPERADO</option>
+            <option value="OTROS">OTROS (especificar)</option>
+        </select>
+        <div id="otrosDiv" class="hidden">
+            <label for="otrosTexto">Especificar otro tipo de venta:</label>
+            <input type="text" id="otrosTexto" name="otrosTexto">
+        </div>
+
+        <label for="folioSiac">FOLIO SIAC (opcional)</label>
+        <input type="number" id="folioSiac" name="folioSiac" step="1">
+
+        <label for="gerenteZona">GERENTE DE ZONA *</label>
+        <input type="text" id="gerenteZona" name="gerenteZona" required>
+
+        <label for="nombrePromotor">NOMBRE DEL PROMOTOR * (persistente)</label>
+        <input type="text" id="nombrePromotor" name="nombrePromotor" required>
+
+        <label for="clavePromotor">CLAVE PROMOTOR * (número, persistente)</label>
+        <input type="number" id="clavePromotor" name="clavePromotor" step="1" required>
+
+        <h2>DATOS DEL CLIENTE</h2>
+        <label for="nombreCliente">Nombre del cliente *</label>
+        <input type="text" id="nombreCliente" name="nombreCliente" required>
+
+        <label for="celularCliente">Celular del cliente (10 dígitos) *</label>
+        <input type="tel" id="celularCliente" name="celularCliente" pattern="[0-9]{10}" maxlength="10" required>
+
+        <label for="celularAdicional">Celular adicional 1 (10 dígitos)</label>
+        <input type="tel" id="celularAdicional" name="celularAdicional" pattern="[0-9]{10}" maxlength="10">
+
+        <label for="correo">Correo electrónico *</label>
+        <input type="email" id="correo" name="correo" required>
+
+        <label for="companiaActual">Compañía Actual</label>
+        <input type="text" id="companiaActual" name="companiaActual">
+
+        <h2>DOMICILIO DEL CLIENTE</h2>
+        <label for="calleNumero">Calle y número *</label>
+        <input type="text" id="calleNumero" name="calleNumero" required>
+
+        <label for="entreCalle1">Entre calle 1 *</label>
+        <input type="text" id="entreCalle1" name="entreCalle1" required>
+
+        <label for="entreCalle2">Entre calle 2 *</label>
+        <input type="text" id="entreCalle2" name="entreCalle2" required>
+
+        <label for="colonia">Colonia *</label>
+        <input type="text" id="colonia" name="colonia" required>
+
+        <label for="municipio">Municipio *</label>
+        <input type="text" id="municipio" name="municipio" required>
+
+        <label for="cp">Código postal *</label>
+        <input type="text" id="cp" name="cp" required>
+
+        <h2>PAQUETE QUE REQUIERE</h2>
+        <label for="precioPaquete">Precio del Paquete ($) *</label>
+        <input type="number" id="precioPaquete" name="precioPaquete" step="0.01" required>
+
+        <label for="gastosInstalacion">Gastos de instalación *</label>
+        <input type="text" id="gastosInstalacion" name="gastosInstalacion" required>
+
+        <label for="megas">Megas *</label>
+        <input type="number" id="megas" name="megas" step="1" required>
+
+        <label for="promocion">Promoción (opcional)</label>
+        <input type="text" id="promocion" name="promocion">
+
+        <label for="comprobante">Comprobante que entregó el cliente (opcional)</label>
+        <input type="text" id="comprobante" name="comprobante">
+
+        <label for="terminalClave">Terminal - Clave (número)</label>
+        <input type="number" id="terminalClave" name="terminalClave" step="1">
+
+        <label for="terminalCelula">Terminal - Célula (número)</label>
+        <input type="number" id="terminalCelula" name="terminalCelula" step="1">
+
+        <label for="observacion">Observación</label>
+        <textarea id="observacion" name="observacion" rows="3"></textarea>
+
+        <hr>
+        <button type="submit">Enviar a Google Sheets</button>
+        <div id="mensaje"></div>
+    </form>
+</div>
+
+<script>
+    // Cargar datos persistentes desde localStorage
+    function cargarPersistentes() {
+        const nombreGuardado = localStorage.getItem('nombrePromotor');
+        const claveGuardada = localStorage.getItem('clavePromotor');
+        if (nombreGuardado) document.getElementById('nombrePromotor').value = nombreGuardado;
+        if (claveGuardada) document.getElementById('clavePromotor').value = claveGuardada;
+    }
+
+    // Guardar datos persistentes al cambiar
+    function guardarPersistentes() {
+        const nombre = document.getElementById('nombrePromotor').value;
+        const clave = document.getElementById('clavePromotor').value;
+        if (nombre) localStorage.setItem('nombrePromotor', nombre);
+        if (clave) localStorage.setItem('clavePromotor', clave);
+    }
+
+    // Mostrar/ocultar campo "Otros" en Tipo de venta
+    function manejarTipoVenta() {
+        const tipoSelect = document.getElementById('tipoVenta');
+        const otrosDiv = document.getElementById('otrosDiv');
+        if (tipoSelect.value === 'OTROS') {
+            otrosDiv.classList.remove('hidden');
+            document.getElementById('otrosTexto').setAttribute('required', 'required');
+        } else {
+            otrosDiv.classList.add('hidden');
+            document.getElementById('otrosTexto').removeAttribute('required');
+        }
+    }
+
+    // Validar celular (10 dígitos)
+    function validarCelular(input) {
+        const valor = input.value;
+        if (valor && !/^\d{10}$/.test(valor)) {
+            input.setCustomValidity('Debe tener exactamente 10 dígitos numéricos.');
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    // Envío del formulario
+    document.getElementById('ventaForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Validar campos manualmente si es necesario
+        const celular = document.getElementById('celularCliente');
+        if (!/^\d{10}$/.test(celular.value)) {
+            celular.setCustomValidity('Celular debe tener 10 dígitos');
+            celular.reportValidity();
+            return;
+        }
+        const celularAd = document.getElementById('celularAdicional');
+        if (celularAd.value && !/^\d{10}$/.test(celularAd.value)) {
+            celularAd.setCustomValidity('Celular adicional debe tener 10 dígitos');
+            celularAd.reportValidity();
+            return;
+        }
+
+        // Recoger datos
+        let tipoVenta = document.getElementById('tipoVenta').value;
+        if (tipoVenta === 'OTROS') {
+            const otrosTexto = document.getElementById('otrosTexto').value.trim();
+            if (!otrosTexto) {
+                alert('Por favor especifique el tipo de venta');
+                return;
+            }
+            tipoVenta = otrosTexto;
+        }
+
+        const folioSiac = document.getElementById('folioSiac').value || '';
+        const gerenteZona = document.getElementById('gerenteZona').value;
+        const nombrePromotor = document.getElementById('nombrePromotor').value;
+        const clavePromotor = document.getElementById('clavePromotor').value;
+        const nombreCliente = document.getElementById('nombreCliente').value;
+        const celularCliente = document.getElementById('celularCliente').value;
+        const celularAdicional = document.getElementById('celularAdicional').value || '';
+        const correo = document.getElementById('correo').value;
+        const companiaActual = document.getElementById('companiaActual').value || '';
+        const calleNumero = document.getElementById('calleNumero').value;
+        const entreCalle1 = document.getElementById('entreCalle1').value;
+        const entreCalle2 = document.getElementById('entreCalle2').value;
+        const colonia = document.getElementById('colonia').value;
+        const municipio = document.getElementById('municipio').value;
+        const cp = document.getElementById('cp').value;
+        const precioPaquete = document.getElementById('precioPaquete').value;
+        const gastosInstalacion = document.getElementById('gastosInstalacion').value;
+        const megas = document.getElementById('megas').value;
+        const promocion = document.getElementById('promocion').value || '';
+        const comprobante = document.getElementById('comprobante').value || '';
+        const terminalClave = document.getElementById('terminalClave').value || '';
+        const terminalCelula = document.getElementById('terminalCelula').value || '';
+        const observacion = document.getElementById('observacion').value || '';
+
+        // Construir dirección completa
+        const direccionCompleta = `${calleNumero}, entre ${entreCalle1} y ${entreCalle2}, ${colonia}, ${municipio}, CP ${cp}`;
+
+        // Crear objeto con los datos en el orden que pide la hoja de cálculo
+        const datos = {
+            fecha: new Date().toLocaleDateString('es-ES', { timeZone: 'America/Caracas' }), // GMT-4 asumido Caracas
+            validador: '',
+            estatus: '',
+            folioSiac: folioSiac,
+            tipoVenta: tipoVenta,
+            estrategia: terminalCelula,      // Célula
+            gerentes: gerenteZona,
+            clavePromotor: clavePromotor,
+            nombreCliente: nombreCliente,
+            celularCliente: celularCliente,
+            celularReferencia: celularAdicional,
+            correo: correo,
+            direccion: direccionCompleta,
+            paquete: megas,                  // Usamos Megas como "Paquete"
+            costoPaquete: precioPaquete,
+            observacion: observacion
+        };
+
+        // Aquí debes poner la URL que obtendrás de Google Apps Script
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwwktexyamNF_RxhghICo9CmeNcCirzSwN8fc2m58XVFAOA8eEYcP-lGDDpmzhtFvny/exec';
+
+        try {
+            const respuesta = await fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors', // Necesario para peticiones cross-origin a Google Apps Script
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(datos)
+            });
+            // Con no-cors no podemos leer la respuesta, así que asumimos éxito
+            document.getElementById('mensaje').innerHTML = '<div class="success">Datos enviados correctamente. ✅</div>';
+            // Limpiar campos que no sean persistentes si lo deseas
+            document.getElementById('ventaForm').reset();
+            // Volver a cargar los persistentes (por si se borraron)
+            cargarPersistentes();
+            // Limpiar mensaje después de unos segundos
+            setTimeout(() => {
+                document.getElementById('mensaje').innerHTML = '';
+            }, 5000);
+        } catch (error) {
+            document.getElementById('mensaje').innerHTML = '<div class="error">Error al enviar: ' + error.message + '</div>';
+        }
+    });
+
+    // Eventos para persistencia y validación
+    document.getElementById('nombrePromotor').addEventListener('change', guardarPersistentes);
+    document.getElementById('clavePromotor').addEventListener('change', guardarPersistentes);
+    document.getElementById('tipoVenta').addEventListener('change', manejarTipoVenta);
+    document.getElementById('celularCliente').addEventListener('input', function() { validarCelular(this); });
+    document.getElementById('celularAdicional').addEventListener('input', function() { validarCelular(this); });
+
+    // Inicializar
+    cargarPersistentes();
+    manejarTipoVenta();
+</script>
+</body>
+</html>

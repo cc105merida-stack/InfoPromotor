@@ -130,15 +130,24 @@
             background: #cbd5e0;
         }
 
-        .benefits {
+        .benefits-section {
             background: #e9f5ff;
             padding: 12px;
             border-radius: 10px;
             margin-top: 15px;
-            font-size: 0.9rem;
         }
-        .benefits p {
-            margin: 5px 0;
+        .benefits-section select, .benefits-section .radio-group {
+            margin-top: 8px;
+            margin-bottom: 12px;
+        }
+        .inline-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .inline-checkbox input {
+            width: auto;
         }
 
         button {
@@ -299,7 +308,7 @@
             </div>
         </div>
 
-        <!-- ========== PAQUETE QUE REQUIERE (NUEVO) ========== -->
+        <!-- ========== PAQUETE QUE REQUIERE ========== -->
         <h2>📦 PAQUETE QUE REQUIERE</h2>
         
         <!-- Tipo de cliente: Residencial / Comercial -->
@@ -320,7 +329,7 @@
             </div>
         </div>
 
-        <!-- Selección de velocidad/precio (dinámica) -->
+        <!-- Selección de velocidad/precio -->
         <div class="form-group">
             <label class="required">Selecciona velocidad y precio</label>
             <div id="planesContainer" class="plan-card">
@@ -328,43 +337,36 @@
             </div>
         </div>
 
-        <!-- Beneficios mostrados automáticamente -->
-        <div id="beneficiosContainer" class="benefits hidden">
-            <strong>✨ Beneficios incluidos:</strong>
-            <p id="beneficioContratacion"></p>
-            <p id="beneficioDomiciliacion"></p>
+        <!-- Beneficio de contratación (siempre visible una vez seleccionado plan) -->
+        <div id="beneficioContratacionDiv" class="benefits-section hidden">
+            <strong>🎁 Beneficio por contratación (cliente nuevo)</strong>
+            <p style="font-size: 0.9rem; margin: 5px 0;">Selecciona el entretenimiento que el cliente recibirá:</p>
+            <select id="beneficioContratacionSelect" style="width: 100%;"></select>
         </div>
 
-        <!-- Otros campos del paquete -->
+        <!-- Domiciliación de pago -->
+        <div class="inline-checkbox">
+            <input type="checkbox" id="domiciliacionCheckbox">
+            <label for="domiciliacionCheckbox" style="font-weight: normal;">✅ El cliente domicilia el pago (recibe beneficio adicional)</label>
+        </div>
+
+        <!-- Beneficio por domiciliación (se muestra solo si se activa el checkbox) -->
+        <div id="beneficioDomiciliacionDiv" class="benefits-section hidden">
+            <strong>🏠 Beneficio por domiciliación de pago</strong>
+            <p style="font-size: 0.9rem; margin: 5px 0;">Selecciona el entretenimiento adicional:</p>
+            <select id="beneficioDomiciliacionSelect" style="width: 100%;"></select>
+        </div>
+
+        <!-- Gastos de instalación y observaciones -->
         <div class="form-row">
             <div class="form-group">
                 <label class="required">Gastos de instalación</label>
                 <input type="text" id="gastosInstalacion" required>
             </div>
             <div class="form-group">
-                <label>Promoción (opcional)</label>
-                <input type="text" id="promocion">
+                <label>Observación (opcional)</label>
+                <textarea id="observacion" rows="2"></textarea>
             </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Comprobante que entregó el cliente</label>
-                <input type="text" id="comprobante">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Terminal - Clave</label>
-                <input type="number" id="terminalClave" step="1">
-            </div>
-            <div class="form-group">
-                <label>Terminal - Célula</label>
-                <input type="number" id="terminalCelula" step="1">
-            </div>
-        </div>
-        <div class="form-group">
-            <label>Observación</label>
-            <textarea id="observacion" rows="3"></textarea>
         </div>
 
         <hr>
@@ -375,50 +377,81 @@
 
 <script>
     // --------------------------------------------------------------
-    // BASE DE DATOS DE PLANES (según el archivo Planes.xlsx)
+    // BASE DE DATOS DE PLANES (según archivo Planes.xlsx)
     // --------------------------------------------------------------
     const planesData = {
         Residencial: {
             "Internet+Telefonía": [
-                { precio: 389, megas: 120, beneficioNuevo: "Netflix Estándar con anuncios o HBO Max con anuncios por 6 meses. Universal+ con Claro Video", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios o F1TV" },
-                { precio: 435, megas: 150, beneficioNuevo: "Netflix Estándar con anuncios o HBO Max con anuncios por 6 meses. Universal+ con Claro Video", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios o F1TV" },
-                { precio: 499, megas: 250, beneficioNuevo: "Netflix Estándar con anuncios o HBO Max con anuncios por 6 meses. Universal+ con Claro Video", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios o F1TV" },
-                { precio: 599, megas: 350, beneficioNuevo: "Netflix Estándar con anuncios o HBO Max con anuncios por 6 meses. Universal+ con Claro Video", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios o F1TV" },
-                { precio: 649, megas: 500, beneficioNuevo: "Netflix Estándar con anuncios o HBO Max con anuncios por 6 meses. Universal+ con Claro Video", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios o F1TV" }
+                { precio: 389, megas: 120, 
+                  opcionesContratacion: ["Netflix Estándar con anuncios", "HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios", "F1TV"] },
+                { precio: 435, megas: 150, 
+                  opcionesContratacion: ["Netflix Estándar con anuncios", "HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios", "F1TV"] },
+                { precio: 499, megas: 250,
+                  opcionesContratacion: ["Netflix Estándar con anuncios", "HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios", "F1TV"] },
+                { precio: 599, megas: 350,
+                  opcionesContratacion: ["Netflix Estándar con anuncios", "HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios", "F1TV"] },
+                { precio: 649, megas: 500,
+                  opcionesContratacion: ["Netflix Estándar con anuncios", "HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios", "F1TV"] }
             ],
             "Solo Internet": [
-                { precio: 349, megas: 120, beneficioNuevo: "HBO MAX con anuncios, por 6 meses. Universal+ con Claro Video", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios o F1TV" },
-                { precio: 399, megas: 150, beneficioNuevo: "HBO MAX con anuncios, por 6 meses. Universal+ con Claro Video", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios o F1TV" },
-                { precio: 449, megas: 250, beneficioNuevo: "HBO MAX con anuncios, por 6 meses. Universal+ con Claro Video", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios o F1TV" },
-                { precio: 499, megas: 350, beneficioNuevo: "HBO MAX con anuncios, por 6 meses. Universal+ con Claro Video", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios o F1TV" },
-                { precio: 549, megas: 500, beneficioNuevo: "HBO MAX con anuncios, por 6 meses. Universal+ con Claro Video", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios o F1TV" }
+                { precio: 349, megas: 120,
+                  opcionesContratacion: ["HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios", "F1TV"] },
+                { precio: 399, megas: 150,
+                  opcionesContratacion: ["HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios", "F1TV"] },
+                { precio: 449, megas: 250,
+                  opcionesContratacion: ["HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios", "F1TV"] },
+                { precio: 499, megas: 350,
+                  opcionesContratacion: ["HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios", "F1TV"] },
+                { precio: 549, megas: 500,
+                  opcionesContratacion: ["HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios", "F1TV"] }
             ]
         },
         Comercial: {
             "Internet+Telefonía": [
-                { precio: 399, megas: 120, beneficioNuevo: "Netflix Estándar con anuncios o HBO Max con anuncios por 6 meses. + Soluciones Negocio", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios." },
-                { precio: 549, megas: 250, beneficioNuevo: "HBO MAX con anuncios por 6 meses. + Antivirus Seguridad Internet", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios." },
-                { precio: 799, megas: 500, beneficioNuevo: "HBO MAX con anuncios por 6 meses. + Antivirus Seguridad Internet", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios." }
+                { precio: 399, megas: 120,
+                  opcionesContratacion: ["Netflix Estándar con anuncios", "HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios"] },
+                { precio: 549, megas: 250,
+                  opcionesContratacion: ["HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios"] },
+                { precio: 799, megas: 500,
+                  opcionesContratacion: ["HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios"] }
             ],
             "Solo Internet": [
-                { precio: 349, megas: 120, beneficioNuevo: "HBO MAX con anuncios por 6 meses. + Antivirus Seguridad Internet", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios." },
-                { precio: 449, megas: 250, beneficioNuevo: "HBO MAX con anuncios por 6 meses. + Antivirus Seguridad Internet", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios." },
-                { precio: 499, megas: 350, beneficioNuevo: "HBO MAX con anuncios por 6 meses. + Antivirus Seguridad Internet", beneficioDomicilio: "Elige un entretenimiento adicional por 6 meses sin costo: Netflix con anuncios o HBO Max con anuncios." }
+                { precio: 349, megas: 120,
+                  opcionesContratacion: ["HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios"] },
+                { precio: 449, megas: 250,
+                  opcionesContratacion: ["HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios"] },
+                { precio: 499, megas: 350,
+                  opcionesContratacion: ["HBO Max con anuncios"],
+                  opcionesDomiciliacion: ["Netflix con anuncios", "HBO Max con anuncios"] }
             ]
         }
     };
 
-    // Variables para almacenar el plan seleccionado
-    let selectedPlan = null;
+    let selectedPlanObj = null;  // objeto del plan elegido (precio, megas, opciones)
 
-    // Función para actualizar el contenedor de planes según tipoPlan y modalidad
+    // Actualizar lista de planes según tipo y modalidad
     function actualizarPlanes() {
         const tipoPlanElem = document.querySelector('input[name="tipoPlan"]:checked');
         const modalidadElem = document.querySelector('input[name="modalidad"]:checked');
         if (!tipoPlanElem || !modalidadElem) {
             document.getElementById('planesContainer').innerHTML = '<p style="color: #718096;">Primero elige tipo de plan y modalidad</p>';
-            document.getElementById('beneficiosContainer').classList.add('hidden');
-            selectedPlan = null;
+            ocultarBeneficios();
+            selectedPlanObj = null;
             return;
         }
         const tipo = tipoPlanElem.value;
@@ -428,39 +461,101 @@
             document.getElementById('planesContainer').innerHTML = '<p style="color: red;">No hay planes para esta combinación</p>';
             return;
         }
-        // Generar botones de selección
         let html = '<div style="display: flex; flex-wrap: wrap;">';
         planesList.forEach((plan, idx) => {
-            html += `<div class="plan-option" data-precio="${plan.precio}" data-megas="${plan.megas}" data-beneficio-nuevo="${plan.beneficioNuevo.replace(/"/g, '&quot;')}" data-beneficio-domicilio="${plan.beneficioDomicilio.replace(/"/g, '&quot;')}">
+            html += `<div class="plan-option" data-precio="${plan.precio}" data-megas="${plan.megas}" 
+                            data-opciones-contratacion='${JSON.stringify(plan.opcionesContratacion)}'
+                            data-opciones-domiciliacion='${JSON.stringify(plan.opcionesDomiciliacion)}'>
                         ${plan.precio} $ / mes  -  ${plan.megas} Megas
                      </div>`;
         });
         html += '</div>';
         document.getElementById('planesContainer').innerHTML = html;
         
-        // Agregar event listeners a los botones
+        // Agregar event listeners a los botones de planes
         document.querySelectorAll('.plan-option').forEach(el => {
             el.addEventListener('click', function() {
-                // Quitar clase selected de todos
                 document.querySelectorAll('.plan-option').forEach(opt => opt.classList.remove('selected'));
                 this.classList.add('selected');
-                selectedPlan = {
+                selectedPlanObj = {
                     precio: this.dataset.precio,
                     megas: this.dataset.megas,
-                    beneficioNuevo: this.dataset.beneficioNuevo,
-                    beneficioDomicilio: this.dataset.beneficioDomicilio
+                    opcionesContratacion: JSON.parse(this.dataset.opcionesContratacion),
+                    opcionesDomiciliacion: JSON.parse(this.dataset.opcionesDomiciliacion)
                 };
-                // Mostrar beneficios
-                document.getElementById('beneficiosContainer').classList.remove('hidden');
-                document.getElementById('beneficioContratacion').innerHTML = `🎁 <strong>Al contratar:</strong> ${selectedPlan.beneficioNuevo}`;
-                document.getElementById('beneficioDomiciliacion').innerHTML = `🏠 <strong>Por domiciliar pago:</strong> ${selectedPlan.beneficioDomicilio}`;
+                // Mostrar y llenar los selects de beneficios
+                mostrarBeneficiosContratacion();
+                // Si ya estaba marcada la domiciliación, actualizar también
+                if (document.getElementById('domiciliacionCheckbox').checked) {
+                    mostrarBeneficiosDomiciliacion();
+                } else {
+                    ocultarBeneficiosDomiciliacion();
+                }
             });
         });
     }
 
-    // Escuchar cambios en los radio buttons
+    function mostrarBeneficiosContratacion() {
+        const div = document.getElementById('beneficioContratacionDiv');
+        const select = document.getElementById('beneficioContratacionSelect');
+        if (!selectedPlanObj) {
+            div.classList.add('hidden');
+            return;
+        }
+        div.classList.remove('hidden');
+        select.innerHTML = '';
+        selectedPlanObj.opcionesContratacion.forEach(op => {
+            const option = document.createElement('option');
+            option.value = op;
+            option.textContent = op;
+            select.appendChild(option);
+        });
+        // Si solo hay una opción, la selecciona por defecto
+        if (selectedPlanObj.opcionesContratacion.length === 1) {
+            select.value = selectedPlanObj.opcionesContratacion[0];
+        }
+    }
+
+    function mostrarBeneficiosDomiciliacion() {
+        const div = document.getElementById('beneficioDomiciliacionDiv');
+        const select = document.getElementById('beneficioDomiciliacionSelect');
+        if (!selectedPlanObj) {
+            div.classList.add('hidden');
+            return;
+        }
+        div.classList.remove('hidden');
+        select.innerHTML = '';
+        selectedPlanObj.opcionesDomiciliacion.forEach(op => {
+            const option = document.createElement('option');
+            option.value = op;
+            option.textContent = op;
+            select.appendChild(option);
+        });
+        if (selectedPlanObj.opcionesDomiciliacion.length === 1) {
+            select.value = selectedPlanObj.opcionesDomiciliacion[0];
+        }
+    }
+
+    function ocultarBeneficios() {
+        document.getElementById('beneficioContratacionDiv').classList.add('hidden');
+        ocultarBeneficiosDomiciliacion();
+    }
+
+    function ocultarBeneficiosDomiciliacion() {
+        document.getElementById('beneficioDomiciliacionDiv').classList.add('hidden');
+    }
+
+    // Eventos
     document.querySelectorAll('input[name="tipoPlan"], input[name="modalidad"]').forEach(radio => {
         radio.addEventListener('change', actualizarPlanes);
+    });
+
+    document.getElementById('domiciliacionCheckbox').addEventListener('change', function(e) {
+        if (this.checked) {
+            if (selectedPlanObj) mostrarBeneficiosDomiciliacion();
+        } else {
+            ocultarBeneficiosDomiciliacion();
+        }
     });
 
     // --------------------------------------------------------------
@@ -513,8 +608,8 @@
     document.getElementById('ventaForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        // Validaciones básicas
-        if (!selectedPlan) {
+        // Validaciones
+        if (!selectedPlanObj) {
             alert('Debes seleccionar un plan (precio/velocidad)');
             return;
         }
@@ -539,6 +634,22 @@
             tipoVenta = otrosTexto;
         }
 
+        // Beneficios elegidos
+        const beneficioContratacion = document.getElementById('beneficioContratacionSelect').value;
+        if (!beneficioContratacion) {
+            alert('Selecciona el beneficio por contratación');
+            return;
+        }
+        let beneficioDomiciliacion = "No aplica";
+        if (document.getElementById('domiciliacionCheckbox').checked) {
+            beneficioDomiciliacion = document.getElementById('beneficioDomiciliacionSelect').value;
+            if (!beneficioDomiciliacion) {
+                alert('Selecciona el beneficio por domiciliación');
+                return;
+            }
+        }
+        const textoBeneficios = `CONTRATACION: ${beneficioContratacion}. DOMICILIACIÓN: ${beneficioDomiciliacion}`;
+
         // Datos generales
         const folioSiac = document.getElementById('folioSiac').value || '';
         const gerenteZona = document.getElementById('gerenteZona').value;
@@ -555,32 +666,24 @@
         const municipio = document.getElementById('municipio').value;
         const cp = document.getElementById('cp').value;
         const direccionCompleta = `${calleNumero}, entre ${entreCalle1} y ${entreCalle2}, ${colonia}, ${municipio}, CP ${cp}`;
-
-        // Datos del plan seleccionado
-        const tipoPlan = document.querySelector('input[name="tipoPlan"]:checked').value;
-        const modalidad = document.querySelector('input[name="modalidad"]:checked').value;
-        const velocidad = selectedPlan.megas;
-        const precio = selectedPlan.precio;
-        const beneficioContratacion = selectedPlan.beneficioNuevo;
-        const beneficioDomiciliacion = selectedPlan.beneficioDomicilio;
         const gastosInstalacion = document.getElementById('gastosInstalacion').value;
-        const promocion = document.getElementById('promocion').value || '';
-        const comprobante = document.getElementById('comprobante').value || '';
-        const terminalClave = document.getElementById('terminalClave').value || '';
-        const terminalCelula = document.getElementById('terminalCelula').value || '';
         const observacion = document.getElementById('observacion').value || '';
 
-        // Para la columna "PAQUETE" (original) pondremos una descripción resumida
-        const descripcionPaquete = `${tipoPlan} - ${modalidad} - ${velocidad} Megas - $${precio}`;
+        // Campos de terminal? Ya no se guardan en la hoja, pero los puedes enviar si quieres en observación o en otra columna.
+        // Por simplicidad, los omito. Si quieres agregarlos, avísame.
 
-        // Armar objeto para enviar (coincide con las columnas de la hoja)
+        // Obtener estrategia (campo célula) - lo dejamos vacío o lo puedes poner como un campo extra.
+        // Como ya no está en el formulario, lo envío vacío.
+        const estrategia = '';
+
+        // Construir objeto para enviar (solo las columnas que necesita la hoja)
         const datos = {
             fecha: new Date().toLocaleDateString('es-ES', { timeZone: 'America/Caracas' }),
             validador: '',
             estatus: '',
             folioSiac: folioSiac,
             tipoVenta: tipoVenta,
-            estrategia: terminalCelula,   // campo célula
+            estrategia: estrategia,
             gerentes: gerenteZona,
             clavePromotor: clavePromotor,
             nombreCliente: nombreCliente,
@@ -588,24 +691,14 @@
             celularReferencia: celularAdicional,
             correo: correo,
             direccion: direccionCompleta,
-            paquete: descripcionPaquete,
-            costoPaquete: precio,
-            observacion: observacion,
-            // Nuevas columnas:
-            tipoPlan: tipoPlan,
-            modalidad: modalidad,
-            velocidad: velocidad,
-            precioDetalle: precio,
-            beneficioContratacion: beneficioContratacion,
-            beneficioDomiciliacion: beneficioDomiciliacion,
-            gastosInstalacion: gastosInstalacion,
-            promocion: promocion,
-            comprobante: comprobante,
-            terminalClave: terminalClave,
-            terminalCelula: terminalCelula
+            paquete: selectedPlanObj.precio,      // PRECIO en columna N
+            velocidad: selectedPlanObj.megas,     // VELOCIDAD en columna O
+            gastosInstalacion: gastosInstalacion, // GASTOS DE INSTALACIÓN en columna P
+            beneficios: textoBeneficios,          // BENEFICIOS en columna Q
+            observacion: observacion              // OBSERVACIONES en columna R
         };
 
-        // ⚠️ REEMPLAZA ESTA URL CON LA DE TU APPS SCRIPT
+        // ⚠️ REEMPLAZA ESTA URL CON LA DE TU APPS SCRIPT ACTUALIZADO
         const scriptURL = 'https://script.google.com/macros/s/AKfycbwwktexyamNF_RxhghICo9CmeNcCirzSwN8fc2m58XVFAOA8eEYcP-lGDDpmzhtFvny/exec';
 
         try {
@@ -619,9 +712,10 @@
             this.reset();
             cargarPersistentes();
             // Limpiar selección de planes y beneficios
-            selectedPlan = null;
+            selectedPlanObj = null;
             document.getElementById('planesContainer').innerHTML = '<p style="color: #718096;">Primero elige tipo de plan y modalidad</p>';
-            document.getElementById('beneficiosContainer').classList.add('hidden');
+            ocultarBeneficios();
+            document.getElementById('domiciliacionCheckbox').checked = false;
             setTimeout(() => document.getElementById('mensaje').innerHTML = '', 5000);
         } catch (error) {
             document.getElementById('mensaje').innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;

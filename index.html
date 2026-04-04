@@ -377,7 +377,7 @@
 
 <script>
     // --------------------------------------------------------------
-    // BASE DE DATOS DE PLANES (según archivo Planes.xlsx)
+    // BASE DE DATOS DE PLANES (según archivo Planes.xlsx con correcciones)
     // --------------------------------------------------------------
     const planesData = {
         Residencial: {
@@ -404,7 +404,7 @@
                   opcionesDomiciliacion: ["Netflix con anuncios por seis meses", "HBO Max con anuncios por seis meses", "F1TV por seis meses"] },
                 { precio: 399, megas: 150,
                   opcionesContratacion: ["HBO Max con anuncios por seis meses. Universal + Claro Video"],
-                  opcionesDomiciliacion:["Netflix con anuncios por seis meses", "HBO Max con anuncios por seis meses", "F1TV por seis meses"] },
+                  opcionesDomiciliacion: ["Netflix con anuncios por seis meses", "HBO Max con anuncios por seis meses", "F1TV por seis meses"] },
                 { precio: 449, megas: 250,
                   opcionesContratacion: ["HBO Max con anuncios por seis meses. Universal + Claro Video"],
                   opcionesDomiciliacion: ["Netflix con anuncios por seis meses", "HBO Max con anuncios por seis meses", "F1TV por seis meses"] },
@@ -435,7 +435,7 @@
                 { precio: 349, megas: 120,
                   opcionesContratacion: ["HBO Max con anuncios por seis meses"],
                   opcionesDomiciliacion: ["Netflix con anuncios por seis meses", "HBO Max con anuncios por seis meses"] },
-                { precio: 3999, megas: 150,
+                { precio: 399, megas: 150,   // CORREGIDO: antes era 3999
                   opcionesContratacion: ["HBO Max con anuncios por seis meses"],
                   opcionesDomiciliacion: ["Netflix con anuncios por seis meses", "HBO Max con anuncios por seis meses"] },
                 { precio: 449, megas: 250,
@@ -451,7 +451,20 @@
         }
     };
 
-    let selectedPlanObj = null;  // objeto del plan elegido (precio, megas, opciones)
+    let selectedPlanObj = null;
+
+    // Función para seleccionar un plan automáticamente (el primero de la lista)
+    function seleccionarPrimerPlan() {
+        const primerPlan = document.querySelector('.plan-option');
+        if (primerPlan) {
+            // Simular click en el primer plan
+            primerPlan.click();
+        } else {
+            // Si no hay planes, limpiar selección
+            selectedPlanObj = null;
+            ocultarBeneficios();
+        }
+    }
 
     // Actualizar lista de planes según tipo y modalidad
     function actualizarPlanes() {
@@ -492,9 +505,7 @@
                     opcionesContratacion: JSON.parse(this.dataset.opcionesContratacion),
                     opcionesDomiciliacion: JSON.parse(this.dataset.opcionesDomiciliacion)
                 };
-                // Mostrar y llenar los selects de beneficios
                 mostrarBeneficiosContratacion();
-                // Si ya estaba marcada la domiciliación, actualizar también
                 if (document.getElementById('domiciliacionCheckbox').checked) {
                     mostrarBeneficiosDomiciliacion();
                 } else {
@@ -502,6 +513,9 @@
                 }
             });
         });
+        
+        // Seleccionar automáticamente el primer plan
+        seleccionarPrimerPlan();
     }
 
     function mostrarBeneficiosContratacion() {
@@ -519,7 +533,6 @@
             option.textContent = op;
             select.appendChild(option);
         });
-        // Si solo hay una opción, la selecciona por defecto
         if (selectedPlanObj.opcionesContratacion.length === 1) {
             select.value = selectedPlanObj.opcionesContratacion[0];
         }
@@ -554,7 +567,7 @@
         document.getElementById('beneficioDomiciliacionDiv').classList.add('hidden');
     }
 
-    // Eventos
+    // Eventos: al cambiar tipoPlan o modalidad, actualizar planes
     document.querySelectorAll('input[name="tipoPlan"], input[name="modalidad"]').forEach(radio => {
         radio.addEventListener('change', actualizarPlanes);
     });
@@ -617,7 +630,6 @@
     document.getElementById('ventaForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        // Validaciones
         if (!selectedPlanObj) {
             alert('Debes seleccionar un plan (precio/velocidad)');
             return;
@@ -635,7 +647,6 @@
             return;
         }
 
-        // Tipo de venta (con opción otros)
         let tipoVenta = document.getElementById('tipoVenta').value;
         if (tipoVenta === 'OTROS') {
             const otrosTexto = document.getElementById('otrosTexto').value.trim();
@@ -643,7 +654,6 @@
             tipoVenta = otrosTexto;
         }
 
-        // Beneficios elegidos
         const beneficioContratacion = document.getElementById('beneficioContratacionSelect').value;
         if (!beneficioContratacion) {
             alert('Selecciona el beneficio por contratación');
@@ -659,7 +669,6 @@
         }
         const textoBeneficios = `CONTRATACION: ${beneficioContratacion}. DOMICILIACIÓN: ${beneficioDomiciliacion}`;
 
-        // Datos generales
         const folioSiac = document.getElementById('folioSiac').value || '';
         const gerenteZona = document.getElementById('gerenteZona').value;
         const nombrePromotor = document.getElementById('nombrePromotor').value;
@@ -677,15 +686,8 @@
         const direccionCompleta = `${calleNumero}, entre ${entreCalle1} y ${entreCalle2}, ${colonia}, ${municipio}, CP ${cp}`;
         const gastosInstalacion = document.getElementById('gastosInstalacion').value;
         const observacion = document.getElementById('observacion').value || '';
-
-        // Campos de terminal? Ya no se guardan en la hoja, pero los puedes enviar si quieres en observación o en otra columna.
-        // Por simplicidad, los omito. Si quieres agregarlos, avísame.
-
-        // Obtener estrategia (campo célula) - lo dejamos vacío o lo puedes poner como un campo extra.
-        // Como ya no está en el formulario, lo envío vacío.
         const estrategia = '';
 
-        // Construir objeto para enviar (solo las columnas que necesita la hoja)
         const datos = {
             fecha: new Date().toLocaleDateString('es-ES', { timeZone: 'America/Caracas' }),
             validador: '',
@@ -700,11 +702,11 @@
             celularReferencia: celularAdicional,
             correo: correo,
             direccion: direccionCompleta,
-            paquete: selectedPlanObj.precio,      // PRECIO en columna N
-            velocidad: selectedPlanObj.megas,     // VELOCIDAD en columna O
-            gastosInstalacion: gastosInstalacion, // GASTOS DE INSTALACIÓN en columna P
-            beneficios: textoBeneficios,          // BENEFICIOS en columna Q
-            observacion: observacion              // OBSERVACIONES en columna R
+            paquete: selectedPlanObj.precio,
+            velocidad: selectedPlanObj.megas,
+            gastosInstalacion: gastosInstalacion,
+            beneficios: textoBeneficios,
+            observacion: observacion
         };
 
         // ⚠️ REEMPLAZA ESTA URL CON LA DE TU APPS SCRIPT ACTUALIZADO
@@ -720,7 +722,6 @@
             document.getElementById('mensaje').innerHTML = '<div class="success">✅ Datos enviados correctamente.</div>';
             this.reset();
             cargarPersistentes();
-            // Limpiar selección de planes y beneficios
             selectedPlanObj = null;
             document.getElementById('planesContainer').innerHTML = '<p style="color: #718096;">Primero elige tipo de plan y modalidad</p>';
             ocultarBeneficios();

@@ -235,7 +235,9 @@
         <div class="form-row">
             <div class="form-group">
                 <label class="required">GERENTE DE ZONA</label>
-                <input type="text" id="gerenteZona" required>
+                <select id="gerenteZona" required>
+                    <option value="">Cargando gerentes...</option>
+                </select>
             </div>
         </div>
 
@@ -337,7 +339,7 @@
             </div>
         </div>
 
-        <!-- Beneficio de contratación (siempre visible una vez seleccionado plan) -->
+        <!-- Beneficio de contratación -->
         <div id="beneficioContratacionDiv" class="benefits-section hidden">
             <strong>🎁 Beneficio por contratación (cliente nuevo)</strong>
             <p style="font-size: 0.9rem; margin: 5px 0;">Selecciona el entretenimiento que el cliente recibirá:</p>
@@ -350,7 +352,7 @@
             <label for="domiciliacionCheckbox" style="font-weight: normal;">✅ El cliente domicilia el pago (recibe beneficio adicional)</label>
         </div>
 
-        <!-- Beneficio por domiciliación (se muestra solo si se activa el checkbox) -->
+        <!-- Beneficio por domiciliación -->
         <div id="beneficioDomiciliacionDiv" class="benefits-section hidden">
             <strong>🏠 Beneficio por domiciliación de pago</strong>
             <p style="font-size: 0.9rem; margin: 5px 0;">Selecciona el entretenimiento adicional:</p>
@@ -377,7 +379,51 @@
 
 <script>
     // --------------------------------------------------------------
-    // BASE DE DATOS DE PLANES (según archivo Planes.xlsx con correcciones)
+    // 1. CARGAR LISTA DE GERENTES DESDE GOOGLE SHEETS
+    // --------------------------------------------------------------
+    // IMPORTANTE: Reemplaza esta URL con la de tu Web App (la que tiene doGet y doPost)
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwktexyamNF_RxhghICo9CmeNcCirzSwN8fc2m58XVFAOA8eEYcP-lGDDpmzhtFvny/exec'; // <-- CAMBIA AQUÍ
+
+    async function cargarGerentes() {
+        const select = document.getElementById('gerenteZona');
+        try {
+            const response = await fetch(SCRIPT_URL, { method: 'GET' });
+            const data = await response.json();
+            if (data.gerentes && data.gerentes.length > 0) {
+                select.innerHTML = '<option value="">Seleccione un gerente...</option>';
+                data.gerentes.forEach(gerente => {
+                    const option = document.createElement('option');
+                    option.value = gerente;
+                    option.textContent = gerente;
+                    select.appendChild(option);
+                });
+                // Restaurar el gerente guardado en localStorage
+                const gerenteGuardado = localStorage.getItem('gerenteZona');
+                if (gerenteGuardado && data.gerentes.includes(gerenteGuardado)) {
+                    select.value = gerenteGuardado;
+                }
+            } else {
+                select.innerHTML = '<option value="">No hay gerentes disponibles</option>';
+            }
+        } catch (error) {
+            console.error('Error al cargar gerentes:', error);
+            select.innerHTML = '<option value="">Error al cargar gerentes</option>';
+        }
+    }
+
+    // Guardar el gerente seleccionado en localStorage cuando cambie
+    function guardarGerente() {
+        const select = document.getElementById('gerenteZona');
+        const gerente = select.value;
+        if (gerente) {
+            localStorage.setItem('gerenteZona', gerente);
+        } else {
+            localStorage.removeItem('gerenteZona');
+        }
+    }
+
+    // --------------------------------------------------------------
+    // 2. BASE DE DATOS DE PLANES (igual que antes)
     // --------------------------------------------------------------
     const planesData = {
         Residencial: {
@@ -435,7 +481,7 @@
                 { precio: 349, megas: 120,
                   opcionesContratacion: ["HBO Max con anuncios por seis meses"],
                   opcionesDomiciliacion: ["Netflix con anuncios por seis meses", "HBO Max con anuncios por seis meses"] },
-                { precio: 399, megas: 150,   // CORREGIDO: antes era 3999
+                { precio: 399, megas: 150,
                   opcionesContratacion: ["HBO Max con anuncios por seis meses"],
                   opcionesDomiciliacion: ["Netflix con anuncios por seis meses", "HBO Max con anuncios por seis meses"] },
                 { precio: 449, megas: 250,
@@ -453,20 +499,16 @@
 
     let selectedPlanObj = null;
 
-    // Función para seleccionar un plan automáticamente (el primero de la lista)
     function seleccionarPrimerPlan() {
         const primerPlan = document.querySelector('.plan-option');
         if (primerPlan) {
-            // Simular click en el primer plan
             primerPlan.click();
         } else {
-            // Si no hay planes, limpiar selección
             selectedPlanObj = null;
             ocultarBeneficios();
         }
     }
 
-    // Actualizar lista de planes según tipo y modalidad
     function actualizarPlanes() {
         const tipoPlanElem = document.querySelector('input[name="tipoPlan"]:checked');
         const modalidadElem = document.querySelector('input[name="modalidad"]:checked');
@@ -494,7 +536,6 @@
         html += '</div>';
         document.getElementById('planesContainer').innerHTML = html;
         
-        // Agregar event listeners a los botones de planes
         document.querySelectorAll('.plan-option').forEach(el => {
             el.addEventListener('click', function() {
                 document.querySelectorAll('.plan-option').forEach(opt => opt.classList.remove('selected'));
@@ -513,8 +554,6 @@
                 }
             });
         });
-        
-        // Seleccionar automáticamente el primer plan
         seleccionarPrimerPlan();
     }
 
@@ -567,7 +606,6 @@
         document.getElementById('beneficioDomiciliacionDiv').classList.add('hidden');
     }
 
-    // Eventos: al cambiar tipoPlan o modalidad, actualizar planes
     document.querySelectorAll('input[name="tipoPlan"], input[name="modalidad"]').forEach(radio => {
         radio.addEventListener('change', actualizarPlanes);
     });
@@ -597,6 +635,7 @@
     }
     document.getElementById('nombrePromotor').addEventListener('change', guardarPersistentes);
     document.getElementById('clavePromotor').addEventListener('change', guardarPersistentes);
+    document.getElementById('gerenteZona').addEventListener('change', guardarGerente);
 
     // Mostrar/ocultar "OTROS" en tipo venta
     function manejarTipoVenta() {
@@ -671,6 +710,10 @@
 
         const folioSiac = document.getElementById('folioSiac').value || '';
         const gerenteZona = document.getElementById('gerenteZona').value;
+        if (!gerenteZona) {
+            alert('Selecciona un gerente de zona');
+            return;
+        }
         const nombrePromotor = document.getElementById('nombrePromotor').value;
         const clavePromotor = document.getElementById('clavePromotor').value;
         const nombreCliente = document.getElementById('nombreCliente').value;
@@ -709,11 +752,8 @@
             observacion: observacion
         };
 
-        // ⚠️ REEMPLAZA ESTA URL CON LA DE TU APPS SCRIPT ACTUALIZADO
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwwktexyamNF_RxhghICo9CmeNcCirzSwN8fc2m58XVFAOA8eEYcP-lGDDpmzhtFvny/exec';
-
         try {
-            await fetch(scriptURL, {
+            await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -722,6 +762,9 @@
             document.getElementById('mensaje').innerHTML = '<div class="success">✅ Datos enviados correctamente.</div>';
             this.reset();
             cargarPersistentes();
+            // Restaurar el gerente después del reset (por si se perdió)
+            const gerenteGuardado = localStorage.getItem('gerenteZona');
+            if (gerenteGuardado) document.getElementById('gerenteZona').value = gerenteGuardado;
             selectedPlanObj = null;
             document.getElementById('planesContainer').innerHTML = '<p style="color: #718096;">Primero elige tipo de plan y modalidad</p>';
             ocultarBeneficios();
@@ -732,8 +775,10 @@
         }
     });
 
-    cargarPersistentes();
-    manejarTipoVenta();
+    // Inicialización
+    cargarGerentes();      // Carga la lista de gerentes desde el script
+    cargarPersistentes();  // Carga nombre y clave del promotor
+    manejarTipoVenta();    // Configura el campo "otros"
 </script>
 </body>
 </html>

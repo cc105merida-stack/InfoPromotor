@@ -150,6 +150,26 @@
             width: auto;
         }
 
+        /* Estilos para la sección de imágenes */
+        .imagenes-section {
+            background: #f0fff4;
+            border: 1px solid #c6f6d5;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .imagenes-section input {
+            margin-top: 8px;
+        }
+        .preview-images {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #2d3748;
+            background: #edf2f7;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
         button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -207,12 +227,12 @@
     <h1>📋 Formulario de Ventas</h1>
     <div class="subtitle">Registro de altas y paquetes</div>
 
-    <form id="ventaForm">
-        <!-- ========== TIPO DE VENTA ========== -->
+    <form id="ventaForm" enctype="multipart/form-data">
+        <!-- ========== TIPO DE VENTA (dinámico) ========== -->
         <div class="form-group">
             <label class="required">TIPO DE VENTA</label>
             <select id="tipoVenta" required>
-                <option value="">Cargando opciones...</option>
+                <option value="">Cargando tipos...</option>
             </select>
             <div id="otrosDiv" class="hidden">
                 <label>Especificar otro tipo de venta:</label>
@@ -366,6 +386,14 @@
             </div>
         </div>
 
+        <!-- ========== IMÁGENES (hasta 15) ========== -->
+        <div class="imagenes-section">
+            <label>📸 Imágenes del comprobante o evidencia (máximo 15 archivos)</label>
+            <input type="file" id="imagenes" accept="image/*" multiple>
+            <div id="previewImagenes" class="preview-images hidden"></div>
+            <p style="font-size: 0.8rem; color: #4a5568;">Puedes seleccionar hasta 15 imágenes. Se guardarán en Google Drive y sus enlaces se registrarán.</p>
+        </div>
+
         <hr>
         <button type="submit">📤 Enviar a Google Sheets</button>
         <div id="mensaje"></div>
@@ -374,102 +402,72 @@
 
 <script>
     // --------------------------------------------------------------
-    // CONFIGURACIÓN
+    // CONFIGURACIÓN: URL de tu Web App (debes cambiarla)
     // --------------------------------------------------------------
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwktexyamNF_RxhghICo9CmeNcCirzSwN8fc2m58XVFAOA8eEYcP-lGDDpmzhtFvny/exec'; // <-- CAMBIA AQUÍ
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwktexyamNF_RxhghICo9CmeNcCirzSwN8fc2m58XVFAOA8eEYcP-lGDDpmzhtFvny/exec'; // <-- REEMPLAZAR
 
     // --------------------------------------------------------------
-    // 1. CARGAR GERENTES Y TIPOS DE VENTA DESDE GOOGLE SHEETS
+    // 1. CARGAR GERENTES Y TIPOS DE VENTA
     // --------------------------------------------------------------
-    async function cargarDatosIniciales() {
+    async function cargarSelectores() {
         try {
-            const response = await fetch(SCRIPT_URL, { method: 'GET' });
+            const response = await fetch(SCRIPT_URL);
             const data = await response.json();
             
-            // Cargar gerentes
-            const selectGerente = document.getElementById('gerenteZona');
-            if (data.gerentes && data.gerentes.length > 0) {
-                selectGerente.innerHTML = '<option value="">Seleccione un gerente...</option>';
-                data.gerentes.forEach(gerente => {
-                    const option = document.createElement('option');
-                    option.value = gerente;
-                    option.textContent = gerente;
-                    selectGerente.appendChild(option);
-                });
-                // Restaurar gerente guardado
-                const gerenteGuardado = localStorage.getItem('gerenteZona');
-                if (gerenteGuardado && data.gerentes.includes(gerenteGuardado)) {
-                    selectGerente.value = gerenteGuardado;
-                }
-            } else {
-                selectGerente.innerHTML = '<option value="">No hay gerentes disponibles</option>';
-            }
-
             // Cargar tipos de venta
-            const selectTipoVenta = document.getElementById('tipoVenta');
+            const tipoSelect = document.getElementById('tipoVenta');
             if (data.tiposVenta && data.tiposVenta.length > 0) {
-                selectTipoVenta.innerHTML = '<option value="">Seleccione un tipo de venta...</option>';
+                tipoSelect.innerHTML = '<option value="">Seleccione...</option>';
                 data.tiposVenta.forEach(tipo => {
                     const option = document.createElement('option');
                     option.value = tipo;
                     option.textContent = tipo;
-                    selectTipoVenta.appendChild(option);
+                    tipoSelect.appendChild(option);
                 });
-                // Restaurar tipo de venta guardado (opcional)
-                const tipoGuardado = localStorage.getItem('tipoVenta');
-                if (tipoGuardado && data.tiposVenta.includes(tipoGuardado)) {
-                    selectTipoVenta.value = tipoGuardado;
-                }
-                // Si el tipo seleccionado es "OTROS", mostrar el campo de texto adicional
-                manejarTipoVenta();
+                // Agregar opción "OTROS" manualmente
+                const optionOtros = document.createElement('option');
+                optionOtros.value = "OTROS";
+                optionOtros.textContent = "OTROS (especificar)";
+                tipoSelect.appendChild(optionOtros);
             } else {
-                selectTipoVenta.innerHTML = '<option value="">No hay tipos de venta</option>';
+                tipoSelect.innerHTML = '<option value="">No hay tipos de venta</option>';
+            }
+            
+            // Cargar gerentes
+            const gerenteSelect = document.getElementById('gerenteZona');
+            if (data.gerentes && data.gerentes.length > 0) {
+                gerenteSelect.innerHTML = '<option value="">Seleccione un gerente...</option>';
+                data.gerentes.forEach(gerente => {
+                    const option = document.createElement('option');
+                    option.value = gerente;
+                    option.textContent = gerente;
+                    gerenteSelect.appendChild(option);
+                });
+                const gerenteGuardado = localStorage.getItem('gerenteZona');
+                if (gerenteGuardado && data.gerentes.includes(gerenteGuardado)) {
+                    gerenteSelect.value = gerenteGuardado;
+                }
+            } else {
+                gerenteSelect.innerHTML = '<option value="">No hay gerentes</option>';
             }
         } catch (error) {
-            console.error('Error al cargar datos:', error);
-            document.getElementById('gerenteZona').innerHTML = '<option value="">Error al cargar gerentes</option>';
-            document.getElementById('tipoVenta').innerHTML = '<option value="">Error al cargar tipos de venta</option>';
+            console.error('Error cargando datos:', error);
+            document.getElementById('tipoVenta').innerHTML = '<option value="">Error al cargar</option>';
+            document.getElementById('gerenteZona').innerHTML = '<option value="">Error al cargar</option>';
         }
     }
 
-    // Persistencia de gerente
+    // Guardar gerente seleccionado
     function guardarGerente() {
         const select = document.getElementById('gerenteZona');
         const gerente = select.value;
-        if (gerente) {
-            localStorage.setItem('gerenteZona', gerente);
-        } else {
-            localStorage.removeItem('gerenteZona');
-        }
+        if (gerente) localStorage.setItem('gerenteZona', gerente);
+        else localStorage.removeItem('gerenteZona');
     }
-
-    // Persistencia de tipo de venta (opcional)
-    function guardarTipoVenta() {
-        const select = document.getElementById('tipoVenta');
-        const tipo = select.value;
-        if (tipo && tipo !== 'OTROS') { // no guardamos "OTROS" porque luego se maneja con texto
-            localStorage.setItem('tipoVenta', tipo);
-        } else {
-            localStorage.removeItem('tipoVenta');
-        }
-    }
-
-    // Mostrar/ocultar campo "OTROS" en tipo venta
-    function manejarTipoVenta() {
-        const select = document.getElementById('tipoVenta');
-        const otrosDiv = document.getElementById('otrosDiv');
-        if (select.value === 'OTROS') {
-            otrosDiv.classList.remove('hidden');
-            document.getElementById('otrosTexto').required = true;
-        } else {
-            otrosDiv.classList.add('hidden');
-            document.getElementById('otrosTexto').required = false;
-        }
-        guardarTipoVenta(); // guardar selección (excepto OTROS)
-    }
+    document.getElementById('gerenteZona').addEventListener('change', guardarGerente);
 
     // --------------------------------------------------------------
-    // 2. BASE DE DATOS DE PLANES (igual que antes)
+    // 2. PLANES Y BENEFICIOS (igual que antes)
     // --------------------------------------------------------------
     const planesData = {
         Residencial: {
@@ -547,12 +545,8 @@
 
     function seleccionarPrimerPlan() {
         const primerPlan = document.querySelector('.plan-option');
-        if (primerPlan) {
-            primerPlan.click();
-        } else {
-            selectedPlanObj = null;
-            ocultarBeneficios();
-        }
+        if (primerPlan) primerPlan.click();
+        else { selectedPlanObj = null; ocultarBeneficios(); }
     }
 
     function actualizarPlanes() {
@@ -568,11 +562,11 @@
         const modalidad = modalidadElem.value;
         const planesList = planesData[tipo]?.[modalidad];
         if (!planesList) {
-            document.getElementById('planesContainer').innerHTML = '<p style="color: red;">No hay planes para esta combinación</p>';
+            document.getElementById('planesContainer').innerHTML = '<p style="color: red;">No hay planes</p>';
             return;
         }
         let html = '<div style="display: flex; flex-wrap: wrap;">';
-        planesList.forEach((plan, idx) => {
+        planesList.forEach(plan => {
             html += `<div class="plan-option" data-precio="${plan.precio}" data-megas="${plan.megas}" 
                             data-opciones-contratacion='${JSON.stringify(plan.opcionesContratacion)}'
                             data-opciones-domiciliacion='${JSON.stringify(plan.opcionesDomiciliacion)}'>
@@ -593,11 +587,8 @@
                     opcionesDomiciliacion: JSON.parse(this.dataset.opcionesDomiciliacion)
                 };
                 mostrarBeneficiosContratacion();
-                if (document.getElementById('domiciliacionCheckbox').checked) {
-                    mostrarBeneficiosDomiciliacion();
-                } else {
-                    ocultarBeneficiosDomiciliacion();
-                }
+                if (document.getElementById('domiciliacionCheckbox').checked) mostrarBeneficiosDomiciliacion();
+                else ocultarBeneficiosDomiciliacion();
             });
         });
         seleccionarPrimerPlan();
@@ -606,10 +597,7 @@
     function mostrarBeneficiosContratacion() {
         const div = document.getElementById('beneficioContratacionDiv');
         const select = document.getElementById('beneficioContratacionSelect');
-        if (!selectedPlanObj) {
-            div.classList.add('hidden');
-            return;
-        }
+        if (!selectedPlanObj) { div.classList.add('hidden'); return; }
         div.classList.remove('hidden');
         select.innerHTML = '';
         selectedPlanObj.opcionesContratacion.forEach(op => {
@@ -618,18 +606,13 @@
             option.textContent = op;
             select.appendChild(option);
         });
-        if (selectedPlanObj.opcionesContratacion.length === 1) {
-            select.value = selectedPlanObj.opcionesContratacion[0];
-        }
+        if (selectedPlanObj.opcionesContratacion.length === 1) select.value = selectedPlanObj.opcionesContratacion[0];
     }
 
     function mostrarBeneficiosDomiciliacion() {
         const div = document.getElementById('beneficioDomiciliacionDiv');
         const select = document.getElementById('beneficioDomiciliacionSelect');
-        if (!selectedPlanObj) {
-            div.classList.add('hidden');
-            return;
-        }
+        if (!selectedPlanObj) { div.classList.add('hidden'); return; }
         div.classList.remove('hidden');
         select.innerHTML = '';
         selectedPlanObj.opcionesDomiciliacion.forEach(op => {
@@ -638,16 +621,13 @@
             option.textContent = op;
             select.appendChild(option);
         });
-        if (selectedPlanObj.opcionesDomiciliacion.length === 1) {
-            select.value = selectedPlanObj.opcionesDomiciliacion[0];
-        }
+        if (selectedPlanObj.opcionesDomiciliacion.length === 1) select.value = selectedPlanObj.opcionesDomiciliacion[0];
     }
 
     function ocultarBeneficios() {
         document.getElementById('beneficioContratacionDiv').classList.add('hidden');
         ocultarBeneficiosDomiciliacion();
     }
-
     function ocultarBeneficiosDomiciliacion() {
         document.getElementById('beneficioDomiciliacionDiv').classList.add('hidden');
     }
@@ -655,17 +635,13 @@
     document.querySelectorAll('input[name="tipoPlan"], input[name="modalidad"]').forEach(radio => {
         radio.addEventListener('change', actualizarPlanes);
     });
-
     document.getElementById('domiciliacionCheckbox').addEventListener('change', function(e) {
-        if (this.checked) {
-            if (selectedPlanObj) mostrarBeneficiosDomiciliacion();
-        } else {
-            ocultarBeneficiosDomiciliacion();
-        }
+        if (this.checked && selectedPlanObj) mostrarBeneficiosDomiciliacion();
+        else ocultarBeneficiosDomiciliacion();
     });
 
     // --------------------------------------------------------------
-    // PERSISTENCIA DE PROMOTOR
+    // 3. PERSISTENCIA DE PROMOTOR
     // --------------------------------------------------------------
     function cargarPersistentes() {
         const nombre = localStorage.getItem('nombrePromotor');
@@ -681,142 +657,138 @@
     }
     document.getElementById('nombrePromotor').addEventListener('change', guardarPersistentes);
     document.getElementById('clavePromotor').addEventListener('change', guardarPersistentes);
-    document.getElementById('gerenteZona').addEventListener('change', guardarGerente);
+
+    // Mostrar/ocultar "OTROS" en tipo venta
+    function manejarTipoVenta() {
+        const select = document.getElementById('tipoVenta');
+        const otrosDiv = document.getElementById('otrosDiv');
+        if (select.value === 'OTROS') {
+            otrosDiv.classList.remove('hidden');
+            document.getElementById('otrosTexto').required = true;
+        } else {
+            otrosDiv.classList.add('hidden');
+            document.getElementById('otrosTexto').required = false;
+        }
+    }
     document.getElementById('tipoVenta').addEventListener('change', manejarTipoVenta);
 
     // Validar celular
     function validarCelular(input) {
         const valor = input.value;
-        if (valor && !/^\d{10}$/.test(valor)) {
-            input.setCustomValidity('Debe tener 10 dígitos numéricos');
-        } else {
-            input.setCustomValidity('');
-        }
+        if (valor && !/^\d{10}$/.test(valor)) input.setCustomValidity('Debe tener 10 dígitos');
+        else input.setCustomValidity('');
     }
     document.getElementById('celularCliente').addEventListener('input', function() { validarCelular(this); });
     document.getElementById('celularAdicional').addEventListener('input', function() { validarCelular(this); });
 
+    // Previsualización de imágenes seleccionadas
+    const inputImagenes = document.getElementById('imagenes');
+    const previewDiv = document.getElementById('previewImagenes');
+    inputImagenes.addEventListener('change', function() {
+        const files = Array.from(this.files);
+        if (files.length > 15) {
+            alert('Solo puedes seleccionar máximo 15 imágenes.');
+            this.value = '';
+            previewDiv.classList.add('hidden');
+            return;
+        }
+        if (files.length > 0) {
+            previewDiv.classList.remove('hidden');
+            previewDiv.innerHTML = `<strong>📷 ${files.length} archivo(s) seleccionado(s):</strong><br>${files.map(f => f.name).join(', ')}`;
+        } else {
+            previewDiv.classList.add('hidden');
+        }
+    });
+
     // --------------------------------------------------------------
-    // ENVÍO DEL FORMULARIO
+    // 4. ENVÍO DEL FORMULARIO CON MULTIPART/FORM-DATA
     // --------------------------------------------------------------
     document.getElementById('ventaForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        if (!selectedPlanObj) {
-            alert('Debes seleccionar un plan (precio/velocidad)');
-            return;
-        }
+        // Validaciones
+        if (!selectedPlanObj) { alert('Selecciona un plan'); return; }
         const celular = document.getElementById('celularCliente');
-        if (!/^\d{10}$/.test(celular.value)) {
-            celular.setCustomValidity('Celular debe tener 10 dígitos');
-            celular.reportValidity();
-            return;
-        }
+        if (!/^\d{10}$/.test(celular.value)) { celular.setCustomValidity('Celular 10 dígitos'); celular.reportValidity(); return; }
         const celularAd = document.getElementById('celularAdicional');
-        if (celularAd.value && !/^\d{10}$/.test(celularAd.value)) {
-            celularAd.setCustomValidity('Celular adicional debe tener 10 dígitos');
-            celularAd.reportValidity();
-            return;
-        }
+        if (celularAd.value && !/^\d{10}$/.test(celularAd.value)) { celularAd.setCustomValidity('Celular adicional 10 dígitos'); celularAd.reportValidity(); return; }
 
         let tipoVenta = document.getElementById('tipoVenta').value;
         if (tipoVenta === 'OTROS') {
             const otrosTexto = document.getElementById('otrosTexto').value.trim();
             if (!otrosTexto) { alert('Especifica el tipo de venta'); return; }
             tipoVenta = otrosTexto;
-        } else if (!tipoVenta) {
-            alert('Selecciona un tipo de venta');
-            return;
         }
 
         const beneficioContratacion = document.getElementById('beneficioContratacionSelect').value;
-        if (!beneficioContratacion) {
-            alert('Selecciona el beneficio por contratación');
-            return;
-        }
+        if (!beneficioContratacion) { alert('Selecciona beneficio de contratación'); return; }
         let beneficioDomiciliacion = "No aplica";
         if (document.getElementById('domiciliacionCheckbox').checked) {
             beneficioDomiciliacion = document.getElementById('beneficioDomiciliacionSelect').value;
-            if (!beneficioDomiciliacion) {
-                alert('Selecciona el beneficio por domiciliación');
-                return;
-            }
+            if (!beneficioDomiciliacion) { alert('Selecciona beneficio de domiciliación'); return; }
         }
         const textoBeneficios = `CONTRATACION: ${beneficioContratacion}. DOMICILIACIÓN: ${beneficioDomiciliacion}`;
 
-        const folioSiac = document.getElementById('folioSiac').value || '';
         const gerenteZona = document.getElementById('gerenteZona').value;
-        if (!gerenteZona) {
-            alert('Selecciona un gerente de zona');
-            return;
+        if (!gerenteZona) { alert('Selecciona un gerente'); return; }
+
+        // Construir FormData
+        const formData = new FormData();
+        formData.append('folioSiac', document.getElementById('folioSiac').value || '');
+        formData.append('tipoVenta', tipoVenta);
+        formData.append('estrategia', ''); // célula, vacío
+        formData.append('gerentes', gerenteZona);
+        formData.append('clavePromotor', document.getElementById('clavePromotor').value);
+        formData.append('nombreCliente', document.getElementById('nombreCliente').value);
+        formData.append('celularCliente', celular.value);
+        formData.append('celularReferencia', document.getElementById('celularAdicional').value || '');
+        formData.append('correo', document.getElementById('correo').value);
+        const direccionCompleta = `${document.getElementById('calleNumero').value}, entre ${document.getElementById('entreCalle1').value} y ${document.getElementById('entreCalle2').value}, ${document.getElementById('colonia').value}, ${document.getElementById('municipio').value}, CP ${document.getElementById('cp').value}`;
+        formData.append('direccion', direccionCompleta);
+        formData.append('paquete', selectedPlanObj.precio);
+        formData.append('velocidad', selectedPlanObj.megas);
+        formData.append('gastosInstalacion', document.getElementById('gastosInstalacion').value);
+        formData.append('beneficios', textoBeneficios);
+        formData.append('observacion', document.getElementById('observacion').value || '');
+
+        // Agregar imágenes
+        const files = inputImagenes.files;
+        for (let i = 0; i < files.length && i < 15; i++) {
+            formData.append('imagenes', files[i]);
         }
-        const nombrePromotor = document.getElementById('nombrePromotor').value;
-        const clavePromotor = document.getElementById('clavePromotor').value;
-        const nombreCliente = document.getElementById('nombreCliente').value;
-        const celularCliente = celular.value;
-        const celularAdicional = document.getElementById('celularAdicional').value || '';
-        const correo = document.getElementById('correo').value;
-        const calleNumero = document.getElementById('calleNumero').value;
-        const entreCalle1 = document.getElementById('entreCalle1').value;
-        const entreCalle2 = document.getElementById('entreCalle2').value;
-        const colonia = document.getElementById('colonia').value;
-        const municipio = document.getElementById('municipio').value;
-        const cp = document.getElementById('cp').value;
-        const direccionCompleta = `${calleNumero}, entre ${entreCalle1} y ${entreCalle2}, ${colonia}, ${municipio}, CP ${cp}`;
-        const gastosInstalacion = document.getElementById('gastosInstalacion').value;
-        const observacion = document.getElementById('observacion').value || '';
-        const estrategia = '';
 
-        const datos = {
-            fecha: new Date().toLocaleDateString('es-ES', { timeZone: 'America/Caracas' }),
-            validador: '',
-            estatus: '',
-            folioSiac: folioSiac,
-            tipoVenta: tipoVenta,
-            estrategia: estrategia,
-            gerentes: gerenteZona,
-            clavePromotor: clavePromotor,
-            nombreCliente: nombreCliente,
-            celularCliente: celularCliente,
-            celularReferencia: celularAdicional,
-            correo: correo,
-            direccion: direccionCompleta,
-            paquete: selectedPlanObj.precio,
-            velocidad: selectedPlanObj.megas,
-            gastosInstalacion: gastosInstalacion,
-            beneficios: textoBeneficios,
-            observacion: observacion
-        };
-
+        // Enviar
         try {
-            await fetch(SCRIPT_URL, {
+            const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams(datos)
+                body: formData
             });
-            document.getElementById('mensaje').innerHTML = '<div class="success">✅ Datos enviados correctamente.</div>';
-            this.reset();
-            cargarPersistentes();
-            // Restaurar gerente y tipo de venta después del reset
-            const gerenteGuardado = localStorage.getItem('gerenteZona');
-            if (gerenteGuardado) document.getElementById('gerenteZona').value = gerenteGuardado;
-            const tipoGuardado = localStorage.getItem('tipoVenta');
-            if (tipoGuardado) document.getElementById('tipoVenta').value = tipoGuardado;
-            manejarTipoVenta(); // por si era OTROS
-            selectedPlanObj = null;
-            document.getElementById('planesContainer').innerHTML = '<p style="color: #718096;">Primero elige tipo de plan y modalidad</p>';
-            ocultarBeneficios();
-            document.getElementById('domiciliacionCheckbox').checked = false;
-            setTimeout(() => document.getElementById('mensaje').innerHTML = '', 5000);
+            const result = await response.json();
+            if (result.result === 'ok') {
+                document.getElementById('mensaje').innerHTML = '<div class="success">✅ Datos enviados correctamente. Las imágenes se subieron a Drive.</div>';
+                this.reset();
+                cargarPersistentes();
+                const gerenteGuardado = localStorage.getItem('gerenteZona');
+                if (gerenteGuardado) document.getElementById('gerenteZona').value = gerenteGuardado;
+                selectedPlanObj = null;
+                document.getElementById('planesContainer').innerHTML = '<p style="color: #718096;">Primero elige tipo de plan y modalidad</p>';
+                ocultarBeneficios();
+                document.getElementById('domiciliacionCheckbox').checked = false;
+                previewDiv.classList.add('hidden');
+                inputImagenes.value = '';
+                setTimeout(() => document.getElementById('mensaje').innerHTML = '', 5000);
+            } else {
+                throw new Error(result.error || 'Error desconocido');
+            }
         } catch (error) {
             document.getElementById('mensaje').innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
         }
     });
 
-    // Inicialización
-    cargarDatosIniciales();   // Carga gerentes y tipos de venta
-    cargarPersistentes();     // Carga nombre y clave del promotor
+    // Inicializar
+    cargarSelectores();
+    cargarPersistentes();
+    manejarTipoVenta();
 </script>
 </body>
 </html>

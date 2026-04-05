@@ -150,7 +150,6 @@
             width: auto;
         }
 
-        /* Estilos para la sección de imágenes */
         .imagenes-section {
             background: #f0fff4;
             border: 1px solid #c6f6d5;
@@ -199,9 +198,12 @@
             text-align: center;
         }
         .error {
-            color: #e53e3e;
-            font-size: 0.8rem;
-            margin-top: 4px;
+            background-color: #fed7d7;
+            color: #9b2c2c;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
         }
         .required:after {
             content: " *";
@@ -228,7 +230,7 @@
     <div class="subtitle">Registro de altas y paquetes</div>
 
     <form id="ventaForm" enctype="multipart/form-data">
-        <!-- ========== TIPO DE VENTA (dinámico) ========== -->
+        <!-- ========== TIPO DE VENTA ========== -->
         <div class="form-group">
             <label class="required">TIPO DE VENTA</label>
             <select id="tipoVenta" required>
@@ -328,7 +330,6 @@
         <!-- ========== PAQUETE QUE REQUIERE ========== -->
         <h2>📦 PAQUETE QUE REQUIERE</h2>
         
-        <!-- Tipo de cliente: Residencial / Comercial -->
         <div class="form-group">
             <label class="required">Tipo de plan</label>
             <div class="radio-group">
@@ -337,7 +338,6 @@
             </div>
         </div>
 
-        <!-- Modalidad: Internet+Telefonía / Solo Internet -->
         <div class="form-group">
             <label class="required">Modalidad</label>
             <div class="radio-group">
@@ -346,7 +346,6 @@
             </div>
         </div>
 
-        <!-- Selección de velocidad/precio -->
         <div class="form-group">
             <label class="required">Selecciona velocidad y precio</label>
             <div id="planesContainer" class="plan-card">
@@ -354,27 +353,23 @@
             </div>
         </div>
 
-        <!-- Beneficio de contratación -->
         <div id="beneficioContratacionDiv" class="benefits-section hidden">
             <strong>🎁 Beneficio por contratación (cliente nuevo)</strong>
             <p style="font-size: 0.9rem; margin: 5px 0;">Selecciona el entretenimiento que el cliente recibirá:</p>
             <select id="beneficioContratacionSelect" style="width: 100%;"></select>
         </div>
 
-        <!-- Domiciliación de pago -->
         <div class="inline-checkbox">
             <input type="checkbox" id="domiciliacionCheckbox">
             <label for="domiciliacionCheckbox" style="font-weight: normal;">✅ El cliente domicilia el pago (recibe beneficio adicional)</label>
         </div>
 
-        <!-- Beneficio por domiciliación -->
         <div id="beneficioDomiciliacionDiv" class="benefits-section hidden">
             <strong>🏠 Beneficio por domiciliación de pago</strong>
             <p style="font-size: 0.9rem; margin: 5px 0;">Selecciona el entretenimiento adicional:</p>
             <select id="beneficioDomiciliacionSelect" style="width: 100%;"></select>
         </div>
 
-        <!-- Gastos de instalación y observaciones -->
         <div class="form-row">
             <div class="form-group">
                 <label class="required">Gastos de instalación</label>
@@ -386,7 +381,7 @@
             </div>
         </div>
 
-        <!-- ========== IMÁGENES (hasta 15) ========== -->
+        <!-- ========== IMÁGENES ========== -->
         <div class="imagenes-section">
             <label>📸 Imágenes del comprobante o evidencia (máximo 15 archivos)</label>
             <input type="file" id="imagenes" accept="image/*" multiple>
@@ -401,74 +396,12 @@
 </div>
 
 <script>
-    // --------------------------------------------------------------
-    // CONFIGURACIÓN: URL de tu Web App (debes cambiarla)
-    // --------------------------------------------------------------
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz70NBPs_sb5npaCY8ffebAYvXUd-mmPJYvdbdyIzntXceH-VkLd3w42S8DMSZhKpfS/exec'; // <-- REEMPLAZAR
-
-    // --------------------------------------------------------------
-    // 1. CARGAR GERENTES Y TIPOS DE VENTA
-    // --------------------------------------------------------------
-    async function cargarSelectores() {
-        try {
-            const response = await fetch(SCRIPT_URL);
-            const data = await response.json();
-            
-            // Cargar tipos de venta
-            const tipoSelect = document.getElementById('tipoVenta');
-            if (data.tiposVenta && data.tiposVenta.length > 0) {
-                tipoSelect.innerHTML = '<option value="">Seleccione...</option>';
-                data.tiposVenta.forEach(tipo => {
-                    const option = document.createElement('option');
-                    option.value = tipo;
-                    option.textContent = tipo;
-                    tipoSelect.appendChild(option);
-                });
-                // Agregar opción "OTROS" manualmente
-                const optionOtros = document.createElement('option');
-                optionOtros.value = "OTROS";
-                optionOtros.textContent = "OTROS (especificar)";
-                tipoSelect.appendChild(optionOtros);
-            } else {
-                tipoSelect.innerHTML = '<option value="">No hay tipos de venta</option>';
-            }
-            
-            // Cargar gerentes
-            const gerenteSelect = document.getElementById('gerenteZona');
-            if (data.gerentes && data.gerentes.length > 0) {
-                gerenteSelect.innerHTML = '<option value="">Seleccione un gerente...</option>';
-                data.gerentes.forEach(gerente => {
-                    const option = document.createElement('option');
-                    option.value = gerente;
-                    option.textContent = gerente;
-                    gerenteSelect.appendChild(option);
-                });
-                const gerenteGuardado = localStorage.getItem('gerenteZona');
-                if (gerenteGuardado && data.gerentes.includes(gerenteGuardado)) {
-                    gerenteSelect.value = gerenteGuardado;
-                }
-            } else {
-                gerenteSelect.innerHTML = '<option value="">No hay gerentes</option>';
-            }
-        } catch (error) {
-            console.error('Error cargando datos:', error);
-            document.getElementById('tipoVenta').innerHTML = '<option value="">Error al cargar</option>';
-            document.getElementById('gerenteZona').innerHTML = '<option value="">Error al cargar</option>';
-        }
-    }
-
-    // Guardar gerente seleccionado
-    function guardarGerente() {
-        const select = document.getElementById('gerenteZona');
-        const gerente = select.value;
-        if (gerente) localStorage.setItem('gerenteZona', gerente);
-        else localStorage.removeItem('gerenteZona');
-    }
-    document.getElementById('gerenteZona').addEventListener('change', guardarGerente);
-
-    // --------------------------------------------------------------
-    // 2. PLANES Y BENEFICIOS (igual que antes)
-    // --------------------------------------------------------------
+    // ============================================================
+    // IMPORTANTE: ACTUALIZA ESTA URL CON LA DE TU WEB APP
+    // ============================================================
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz70NBPs_sb5npaCY8ffebAYvXUd-mmPJYvdbdyIzntXceH-VkLd3w42S8DMSZhKpfS/exec'; // <--- ACTUALIZA AQUÍ
+    
+    // Planes y beneficios
     const planesData = {
         Residencial: {
             "Internet+Telefonía": [
@@ -543,10 +476,50 @@
 
     let selectedPlanObj = null;
 
-    function seleccionarPrimerPlan() {
-        const primerPlan = document.querySelector('.plan-option');
-        if (primerPlan) primerPlan.click();
-        else { selectedPlanObj = null; ocultarBeneficios(); }
+    // Cargar selectores
+    async function cargarSelectores() {
+        try {
+            const response = await fetch(SCRIPT_URL);
+            const data = await response.json();
+            
+            const tipoSelect = document.getElementById('tipoVenta');
+            if (data.tiposVenta && data.tiposVenta.length > 0) {
+                tipoSelect.innerHTML = '<option value="">Seleccione...</option>';
+                data.tiposVenta.forEach(tipo => {
+                    const option = document.createElement('option');
+                    option.value = tipo;
+                    option.textContent = tipo;
+                    tipoSelect.appendChild(option);
+                });
+                const optionOtros = document.createElement('option');
+                optionOtros.value = "OTROS";
+                optionOtros.textContent = "OTROS (especificar)";
+                tipoSelect.appendChild(optionOtros);
+            }
+            
+            const gerenteSelect = document.getElementById('gerenteZona');
+            if (data.gerentes && data.gerentes.length > 0) {
+                gerenteSelect.innerHTML = '<option value="">Seleccione un gerente...</option>';
+                data.gerentes.forEach(gerente => {
+                    const option = document.createElement('option');
+                    option.value = gerente;
+                    option.textContent = gerente;
+                    gerenteSelect.appendChild(option);
+                });
+                const gerenteGuardado = localStorage.getItem('gerenteZona');
+                if (gerenteGuardado && data.gerentes.includes(gerenteGuardado)) {
+                    gerenteSelect.value = gerenteGuardado;
+                }
+            }
+        } catch (error) {
+            console.error('Error cargando datos:', error);
+        }
+    }
+
+    function guardarGerente() {
+        const select = document.getElementById('gerenteZona');
+        const gerente = select.value;
+        if (gerente) localStorage.setItem('gerenteZona', gerente);
     }
 
     function actualizarPlanes() {
@@ -591,7 +564,9 @@
                 else ocultarBeneficiosDomiciliacion();
             });
         });
-        seleccionarPrimerPlan();
+        // Seleccionar primer plan automáticamente
+        const primerPlan = document.querySelector('.plan-option');
+        if (primerPlan) primerPlan.click();
     }
 
     function mostrarBeneficiosContratacion() {
@@ -628,37 +603,41 @@
         document.getElementById('beneficioContratacionDiv').classList.add('hidden');
         ocultarBeneficiosDomiciliacion();
     }
+    
     function ocultarBeneficiosDomiciliacion() {
         document.getElementById('beneficioDomiciliacionDiv').classList.add('hidden');
     }
 
+    // Event listeners
     document.querySelectorAll('input[name="tipoPlan"], input[name="modalidad"]').forEach(radio => {
         radio.addEventListener('change', actualizarPlanes);
     });
+    
     document.getElementById('domiciliacionCheckbox').addEventListener('change', function(e) {
         if (this.checked && selectedPlanObj) mostrarBeneficiosDomiciliacion();
         else ocultarBeneficiosDomiciliacion();
     });
 
-    // --------------------------------------------------------------
-    // 3. PERSISTENCIA DE PROMOTOR
-    // --------------------------------------------------------------
+    // Persistencia
     function cargarPersistentes() {
         const nombre = localStorage.getItem('nombrePromotor');
         const clave = localStorage.getItem('clavePromotor');
         if (nombre) document.getElementById('nombrePromotor').value = nombre;
         if (clave) document.getElementById('clavePromotor').value = clave;
     }
+    
     function guardarPersistentes() {
         const nombre = document.getElementById('nombrePromotor').value;
         const clave = document.getElementById('clavePromotor').value;
         if (nombre) localStorage.setItem('nombrePromotor', nombre);
         if (clave) localStorage.setItem('clavePromotor', clave);
     }
+
     document.getElementById('nombrePromotor').addEventListener('change', guardarPersistentes);
     document.getElementById('clavePromotor').addEventListener('change', guardarPersistentes);
+    document.getElementById('gerenteZona').addEventListener('change', guardarGerente);
 
-    // Mostrar/ocultar "OTROS" en tipo venta
+    // Manejar tipo venta "OTROS"
     function manejarTipoVenta() {
         const select = document.getElementById('tipoVenta');
         const otrosDiv = document.getElementById('otrosDiv');
@@ -670,20 +649,23 @@
             document.getElementById('otrosTexto').required = false;
         }
     }
+    
     document.getElementById('tipoVenta').addEventListener('change', manejarTipoVenta);
 
-    // Validar celular
+    // Validar celulares
     function validarCelular(input) {
         const valor = input.value;
         if (valor && !/^\d{10}$/.test(valor)) input.setCustomValidity('Debe tener 10 dígitos');
         else input.setCustomValidity('');
     }
+    
     document.getElementById('celularCliente').addEventListener('input', function() { validarCelular(this); });
     document.getElementById('celularAdicional').addEventListener('input', function() { validarCelular(this); });
 
-    // Previsualización de imágenes seleccionadas
+    // Previsualización de imágenes
     const inputImagenes = document.getElementById('imagenes');
     const previewDiv = document.getElementById('previewImagenes');
+    
     inputImagenes.addEventListener('change', function() {
         const files = Array.from(this.files);
         if (files.length > 15) {
@@ -700,49 +682,75 @@
         }
     });
 
-    // --------------------------------------------------------------
-    // 4. ENVÍO DEL FORMULARIO CON MULTIPART/FORM-DATA
-    // --------------------------------------------------------------
+    // ENVÍO DEL FORMULARIO
     document.getElementById('ventaForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
         // Validaciones
-        if (!selectedPlanObj) { alert('Selecciona un plan'); return; }
+        if (!selectedPlanObj) { 
+            alert('Selecciona un plan'); 
+            return; 
+        }
+        
         const celular = document.getElementById('celularCliente');
-        if (!/^\d{10}$/.test(celular.value)) { celular.setCustomValidity('Celular 10 dígitos'); celular.reportValidity(); return; }
+        if (!/^\d{10}$/.test(celular.value)) { 
+            celular.setCustomValidity('Celular 10 dígitos'); 
+            celular.reportValidity(); 
+            return; 
+        }
+        
         const celularAd = document.getElementById('celularAdicional');
-        if (celularAd.value && !/^\d{10}$/.test(celularAd.value)) { celularAd.setCustomValidity('Celular adicional 10 dígitos'); celularAd.reportValidity(); return; }
+        if (celularAd.value && !/^\d{10}$/.test(celularAd.value)) { 
+            celularAd.setCustomValidity('Celular adicional 10 dígitos'); 
+            celularAd.reportValidity(); 
+            return; 
+        }
 
         let tipoVenta = document.getElementById('tipoVenta').value;
         if (tipoVenta === 'OTROS') {
             const otrosTexto = document.getElementById('otrosTexto').value.trim();
-            if (!otrosTexto) { alert('Especifica el tipo de venta'); return; }
+            if (!otrosTexto) { 
+                alert('Especifica el tipo de venta'); 
+                return; 
+            }
             tipoVenta = otrosTexto;
         }
 
         const beneficioContratacion = document.getElementById('beneficioContratacionSelect').value;
-        if (!beneficioContratacion) { alert('Selecciona beneficio de contratación'); return; }
+        if (!beneficioContratacion) { 
+            alert('Selecciona beneficio de contratación'); 
+            return; 
+        }
+        
         let beneficioDomiciliacion = "No aplica";
         if (document.getElementById('domiciliacionCheckbox').checked) {
             beneficioDomiciliacion = document.getElementById('beneficioDomiciliacionSelect').value;
-            if (!beneficioDomiciliacion) { alert('Selecciona beneficio de domiciliación'); return; }
+            if (!beneficioDomiciliacion) { 
+                alert('Selecciona beneficio de domiciliación'); 
+                return; 
+            }
         }
+        
         const textoBeneficios = `CONTRATACION: ${beneficioContratacion}. DOMICILIACIÓN: ${beneficioDomiciliacion}`;
 
         const gerenteZona = document.getElementById('gerenteZona').value;
-        if (!gerenteZona) { alert('Selecciona un gerente'); return; }
+        if (!gerenteZona) { 
+            alert('Selecciona un gerente'); 
+            return; 
+        }
 
         // Construir FormData
         const formData = new FormData();
         formData.append('folioSiac', document.getElementById('folioSiac').value || '');
         formData.append('tipoVenta', tipoVenta);
-        formData.append('estrategia', ''); // célula, vacío
+        formData.append('estrategia', '');
         formData.append('gerentes', gerenteZona);
         formData.append('clavePromotor', document.getElementById('clavePromotor').value);
         formData.append('nombreCliente', document.getElementById('nombreCliente').value);
         formData.append('celularCliente', celular.value);
         formData.append('celularReferencia', document.getElementById('celularAdicional').value || '');
         formData.append('correo', document.getElementById('correo').value);
+        
         const direccionCompleta = `${document.getElementById('calleNumero').value}, entre ${document.getElementById('entreCalle1').value} y ${document.getElementById('entreCalle2').value}, ${document.getElementById('colonia').value}, ${document.getElementById('municipio').value}, CP ${document.getElementById('cp').value}`;
         formData.append('direccion', direccionCompleta);
         formData.append('paquete', selectedPlanObj.precio);
@@ -751,11 +759,18 @@
         formData.append('beneficios', textoBeneficios);
         formData.append('observacion', document.getElementById('observacion').value || '');
 
-        // Agregar imágenes
+        // Agregar imágenes - CADA IMAGEN CON SU PROPIO NOMBRE
         const files = inputImagenes.files;
+        console.log("Número de archivos seleccionados:", files.length);
+        
         for (let i = 0; i < files.length && i < 15; i++) {
             formData.append('imagenes', files[i]);
+            console.log("Archivo agregado:", files[i].name, files[i].size);
         }
+
+        // Mostrar mensaje de carga
+        const mensajeDiv = document.getElementById('mensaje');
+        mensajeDiv.innerHTML = '<div class="success">⏳ Enviando datos y subiendo imágenes...</div>';
 
         // Enviar
         try {
@@ -763,9 +778,17 @@
                 method: 'POST',
                 body: formData
             });
+            
             const result = await response.json();
+            console.log("Respuesta del servidor:", result);
+            
             if (result.result === 'ok') {
-                document.getElementById('mensaje').innerHTML = '<div class="success">✅ Datos enviados correctamente. Las imágenes se subieron a Drive.</div>';
+                mensajeDiv.innerHTML = `<div class="success">✅ Datos enviados correctamente.<br>
+                📸 Imágenes subidas: ${result.imagenesSubidas || 0}<br>
+                📁 Archivos recibidos: ${result.archivosRecibidos || 0}<br>
+                💾 Revisa tu hoja de cálculo y carpeta IMAGENES</div>`;
+                
+                // Resetear formulario
                 this.reset();
                 cargarPersistentes();
                 const gerenteGuardado = localStorage.getItem('gerenteZona');
@@ -776,12 +799,14 @@
                 document.getElementById('domiciliacionCheckbox').checked = false;
                 previewDiv.classList.add('hidden');
                 inputImagenes.value = '';
-                setTimeout(() => document.getElementById('mensaje').innerHTML = '', 5000);
+                
+                setTimeout(() => mensajeDiv.innerHTML = '', 8000);
             } else {
                 throw new Error(result.error || 'Error desconocido');
             }
         } catch (error) {
-            document.getElementById('mensaje').innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            console.error("Error detallado:", error);
+            mensajeDiv.innerHTML = `<div class="error">❌ Error: ${error.message}<br>Verifica la consola (F12) para más detalles</div>`;
         }
     });
 
